@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.time.format.DateTimeFormatter;
 import javax.swing.JFormattedTextField.AbstractFormatter;
+import javax.swing.table.DefaultTableCellRenderer;
 
 public class BalanceAppGUI {
 
@@ -92,75 +93,81 @@ public class BalanceAppGUI {
 
     // Displays the monthly balance entries in a table
     public void showMonthlyBalanceTable() {
-        // Month selection dropdown
         String[] months = {
                 "January", "February", "March", "April", "May", "June",
                 "July", "August", "September", "October", "November", "December"
         };
         JComboBox<String> monthCombo = new JComboBox<>(months);
 
-        // Year spinner with range 2000–2100
         SpinnerNumberModel yearModel = new SpinnerNumberModel(LocalDate.now().getYear(), 2000, 2100, 1);
         JSpinner yearSpinner = new JSpinner(yearModel);
-
-        // Ensure spinner displays year as full number (e.g., 2025 instead of 2.025)
         JSpinner.NumberEditor editor = new JSpinner.NumberEditor(yearSpinner, "####");
         yearSpinner.setEditor(editor);
 
-        // Create the panel for month/year selection
         JPanel monthPanel = new JPanel(new GridLayout(2, 2));
         monthPanel.add(new JLabel("Select Month:"));
         monthPanel.add(monthCombo);
         monthPanel.add(new JLabel("Select Year:"));
         monthPanel.add(yearSpinner);
 
-        // Show dialog for selecting month and year
         int result = JOptionPane.showConfirmDialog(null, monthPanel, "Select Month and Year",
                 JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
 
-        // Cancel if user pressed Cancel
         if (result != JOptionPane.OK_OPTION) return;
 
-        // Get selected month and year
-        int selectedMonth = monthCombo.getSelectedIndex() + 1; // Combo index starts at 0
+        int selectedMonth = monthCombo.getSelectedIndex() + 1;
         int selectedYear = (Integer) yearSpinner.getValue();
         LocalDate selectedDate = LocalDate.of(selectedYear, selectedMonth, 1);
 
-        // Determine the table name for selected month/year
         String tableName = DatabaseManager.getMonthlyTableName(selectedDate);
         DatabaseManager db = new DatabaseManager();
-
-        // Retrieve entries for the selected month
         List<DailyEntry> entries = db.getEntriesFromMonthlyTable(tableName, null);
 
         if (entries.isEmpty()) {
-            // Show message if no data found
             JOptionPane.showMessageDialog(null, "No entries found or table '" + tableName + "' does not exist.");
             return;
         }
 
-        // Format for displaying dates in table
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d. M. yyyy");
-
-        // Prepare data for JTable
         String[] columnNames = {"Date", "Revenue", "Expense", "Profit"};
         Object[][] data = new Object[entries.size()][4];
 
         for (int i = 0; i < entries.size(); i++) {
             DailyEntry e = entries.get(i);
-            String formattedDate = e.getDate().format(formatter);
-            data[i][0] = formattedDate;
+            data[i][0] = e.getDate().format(formatter);
             data[i][1] = e.getRevenue();
             data[i][2] = e.getExpense();
             data[i][3] = e.getProfit();
         }
 
-        // Create and show table in a scroll pane
         JTable table = new JTable(data, columnNames);
+
+        // Custom cell renderer for Profit column
+        table.getColumnModel().getColumn(3).setCellRenderer(new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value,
+                                                           boolean isSelected, boolean hasFocus,
+                                                           int row, int column) {
+                Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                if (value instanceof Number) {
+                    double profit = ((Number) value).doubleValue();
+                    if (profit > 0) {
+                        c.setForeground(new Color(0, 128, 0)); // Green
+                    } else if (profit < 0) {
+                        c.setForeground(Color.RED); // Red
+                    } else {
+                        c.setForeground(Color.BLACK); // Zero
+                    }
+                } else {
+                    c.setForeground(Color.BLACK); // Default
+                }
+                return c;
+            }
+        });
+
         JScrollPane scrollPane = new JScrollPane(table);
         table.setFillsViewportHeight(true);
 
-        // Display the table in a dialog
         JOptionPane.showMessageDialog(null, scrollPane,
                 "Balance for " + months[selectedMonth - 1] + " " + selectedYear,
                 JOptionPane.INFORMATION_MESSAGE);
