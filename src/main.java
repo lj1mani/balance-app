@@ -6,7 +6,7 @@ public class main {
         BalanceAppGUI balanceGUI = new BalanceAppGUI();
 
         // Menu options for the user to choose from
-        String[] options = {"Insert daily", "Update", "Show balance"};
+        String[] options = {"Insert daily", "SUM for month", "Show balance"};
 
         // Infinite loop to keep showing the menu until user chooses "Exit"
         while (true) {
@@ -36,7 +36,7 @@ public class main {
                     break;
 
                 case 1:
-
+                    balanceGUI.showMonthlyProfitSummary();
                     break;
 
                 case 2:

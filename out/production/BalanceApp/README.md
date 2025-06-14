@@ -9,31 +9,15 @@ A simple Java desktop application for managing daily financial entries (revenues
 
 ## 🧰 Features
 
-📅 Insert Daily Revenue and Expense
-
-📈 Automatic Profit Calculation (profit = revenue - expense)
-
-🧠 Avoid Duplicate Entries (updates entry for the same date)
-
-📋 View Monthly Entries in a Table
-
-📆 Select Month & Year to View Entries
-
-💰 NEW: Monthly Profit Summary – shows the total monthly profit!
-
-🗂️ Tables are Automatically Created per Month
+- 📅 Insert balance entries using a calendar popup
+- 📊 Display monthly summary with profit calculation
+- 💾 Auto-create SQL tables per month like `may_25`, `june_25`, etc.
+- 🔄 Automatically updates existing entries for the same date
+- ❗ Warning dialog if selected table does not exist
 
 ---
 
-### 🚀 How to Run
-
-Make sure you have Java and MariaDB installed.
-
-Create the balance_db database in MariaDB.
-
-Set your database credentials in DatabaseManager.java.
-
-Run the application via your IDE or java Main.
+## 🚀 Getting Started
 
 ### Prerequisites
 
@@ -46,25 +30,10 @@ Run the application via your IDE or java Main.
 
 1. Create a database named `balance_db`:
 
-
+sql
 CREATE DATABASE balance_db;
 You don't need to create monthly tables manually — the app creates them automatically in the format:
 june_25, july_25, etc.
-
-💾 Database Structure
-Each table is named based on the month and year (e.g., june_25) and contains:
-
-Column	Type	Description
-
-id	INT (Auto Inc.)	Primary key
-
-entry_date	DATE	Unique daily entry date
-
-revenue	DECIMAL(10,2)	Daily revenue
-
-expense	DECIMAL(10,2)	Daily expense
-
-profit	DECIMAL(10,2)	Auto-calculated: revenue - expense
 
 ### Configuration
 

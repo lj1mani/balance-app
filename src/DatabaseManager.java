@@ -120,4 +120,22 @@ public class DatabaseManager {
         }
     }
 
+    public Double getTotalProfitFromTable(String tableName) {
+        String sql = "SELECT SUM(profit) AS total_profit FROM " + tableName;
+
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+
+            if (rs.next()) {
+                return rs.getDouble("total_profit");
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return null; // return null if error or no result
+    }
+
 }

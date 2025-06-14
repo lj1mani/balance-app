@@ -165,4 +165,76 @@ public class BalanceAppGUI {
                 "Balance for " + months[selectedMonth - 1] + " " + selectedYear,
                 JOptionPane.INFORMATION_MESSAGE);
     }
+
+    public void showMonthlyProfitSummary() {
+        // Array of month names for the dropdown menu
+        String[] months = {
+                "January", "February", "March", "April", "May", "June",
+                "July", "August", "September", "October", "November", "December"
+        };
+
+        // Combo box for month selection
+        JComboBox<String> monthCombo = new JComboBox<>(months);
+
+        // Spinner for selecting the year (from 2000 to 2100)
+        SpinnerNumberModel yearModel = new SpinnerNumberModel(LocalDate.now().getYear(), 2000, 2100, 1);
+        JSpinner yearSpinner = new JSpinner(yearModel);
+
+        // Ensure the year is displayed as 4 digits (e.g. 2025 instead of 2.025)
+        JSpinner.NumberEditor editor = new JSpinner.NumberEditor(yearSpinner, "####");
+        yearSpinner.setEditor(editor);
+
+        // Build input panel for the dialog
+        JPanel panel = new JPanel(new GridLayout(2, 2));
+        panel.add(new JLabel("Select Month:"));
+        panel.add(monthCombo);
+        panel.add(new JLabel("Select Year:"));
+        panel.add(yearSpinner);
+
+        // Show a dialog for user to pick month and year
+        int result = JOptionPane.showConfirmDialog(null, panel, "Select Month and Year",
+                JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+
+        // If user cancels, exit method
+        if (result != JOptionPane.OK_OPTION) return;
+
+        // Get selected month and year
+        int selectedMonth = monthCombo.getSelectedIndex() + 1; // JComboBox index starts from 0
+        int selectedYear = (Integer) yearSpinner.getValue();
+        LocalDate selectedDate = LocalDate.of(selectedYear, selectedMonth, 1);
+
+        // Format table name (e.g. "june_25") based on selected date
+        String tableName = DatabaseManager.getMonthlyTableName(selectedDate);
+
+        // Create instance of DatabaseManager
+        DatabaseManager db = new DatabaseManager();
+
+        // Check if the table for selected month/year exists
+        if (!db.doesMonthlyTableExist(tableName)) {
+            JOptionPane.showMessageDialog(null,
+                    "Table for " + months[selectedMonth - 1] + " " + selectedYear + " does not exist.",
+                    "Missing Table", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        // Fetch total profit from the database for the selected table
+        Double totalProfit = db.getTotalProfitFromTable(tableName);
+
+        // If profit is found, show result, otherwise show error message
+        if (totalProfit != null) {
+            JOptionPane.showMessageDialog(null,
+                    "Total Profit for " + months[selectedMonth - 1] + " " + selectedYear + " is: " + totalProfit + " €",
+                    "Monthly Profit Summary",
+                    JOptionPane.INFORMATION_MESSAGE);
+        } else {
+            JOptionPane.showMessageDialog(null,
+                    "Could not retrieve profit data for the selected month.",
+                    "Data Error",
+                    JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+
+
+
 }
