@@ -2,6 +2,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.time.LocalDate;
 import org.jdatepicker.impl.*;
+
+import java.time.YearMonth;
 import java.time.ZoneId;
 import java.util.Date;
 import java.util.Properties;
@@ -10,6 +12,7 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.List;
 import java.time.format.DateTimeFormatter;
+import java.util.stream.IntStream;
 import javax.swing.JFormattedTextField.AbstractFormatter;
 import javax.swing.table.DefaultTableCellRenderer;
 
@@ -276,6 +279,83 @@ public class BalanceAppGUI {
         }
     }
 
+    public void showUpdateDailyEntryDialog() {
+        // --- DATE PICKER ---
+        UtilDateModel model = new UtilDateModel();
+        model.setValue(new Date());
+        Properties p = new Properties();
+        p.put("text.today", "Today");
+        p.put("text.month", "Month");
+        p.put("text.year", "Year");
+        JDatePanelImpl datePanel = new JDatePanelImpl(model, p);
+        JDatePickerImpl datePicker = new JDatePickerImpl(datePanel, new DateLabelFormatter());
+
+        // --- INPUT FIELDS ---
+        JFormattedTextField revenueField = new JFormattedTextField();
+        revenueField.setColumns(10);
+        JFormattedTextField expenseField = new JFormattedTextField();
+        expenseField.setColumns(10);
+
+        // --- PANEL LAYOUT ---
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setBorder(BorderFactory.createTitledBorder("Update Daily Entry"));
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.anchor = GridBagConstraints.WEST;
+
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        panel.add(new JLabel("Select Date:"), gbc);
+        gbc.gridx = 1;
+        panel.add(datePicker, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        panel.add(new JLabel("New Revenue (€):"), gbc);
+        gbc.gridx = 1;
+        panel.add(revenueField, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        panel.add(new JLabel("New Expense (€):"), gbc);
+        gbc.gridx = 1;
+        panel.add(expenseField, gbc);
+
+        // --- SHOW DIALOG ---
+        int result = JOptionPane.showConfirmDialog(
+                null,
+                panel,
+                "Update Daily Entry",
+                JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.PLAIN_MESSAGE
+        );
+
+        if (result == JOptionPane.OK_OPTION) {
+            try {
+                Date selectedDate = (Date) datePicker.getModel().getValue();
+                if (selectedDate == null) throw new Exception("Date is required");
+
+                LocalDate date = selectedDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+                double revenue = Double.parseDouble(revenueField.getText().trim());
+                double expense = Double.parseDouble(expenseField.getText().trim());
+
+                DailyEntry updatedEntry = new DailyEntry(date, revenue, expense);
+                DatabaseManager db = new DatabaseManager();
+                String tableName = DatabaseManager.getMonthlyTableName(date);
+
+                boolean success = db.updateEntryInMonthlyTable(updatedEntry, tableName);
+
+                if (success) {
+                    JOptionPane.showMessageDialog(null, "Entry updated successfully.");
+                } else {
+                    JOptionPane.showMessageDialog(null, "Failed to update entry. Entry for the date may not exist.", "Update Failed", JOptionPane.WARNING_MESSAGE);
+                }
+
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(null, "Error: " + e.getMessage(), "Input Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
 
 
 

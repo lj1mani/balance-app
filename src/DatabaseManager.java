@@ -70,6 +70,15 @@ public class DatabaseManager {
         }
     }
 
+    public boolean insertDailyEntry2(DailyEntry entry) {
+        try {
+            return true;  // success
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;  // failed
+        }
+    }
+
     // Retrieves all entries from a specific monthly table
     public List<DailyEntry> getEntriesFromMonthlyTable(String tableName, Component parent) {
         List<DailyEntry> entries = new ArrayList<>();
@@ -138,4 +147,45 @@ public class DatabaseManager {
         return null; // return null if error or no result
     }
 
+    // Fetch daily entry by date
+    public DailyEntry getDailyEntry(LocalDate date) {
+
+        String tableName = formatMonthName(LocalDate.now()); // Format table name based on current date
+        String sql = "SELECT revenue, expense FROM" + tableName + "WHERE date = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setDate(1, Date.valueOf(date));
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                double revenue = rs.getDouble("revenue");
+                double expense = rs.getDouble("expense");
+                return new DailyEntry(date, revenue, expense);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null; // No entry found or error
+    }
+
+    // Update existing daily entry
+    public boolean updateEntryInMonthlyTable(DailyEntry entry, String tableName) {
+        String sql = "UPDATE " + tableName + " SET revenue = ?, expense = ? WHERE entry_date = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setDouble(1, entry.getRevenue());
+            stmt.setDouble(2, entry.getExpense());
+            stmt.setDate(3, Date.valueOf(entry.getDate()));
+
+            return stmt.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 }
+
+
