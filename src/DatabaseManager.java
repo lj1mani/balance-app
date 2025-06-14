@@ -6,17 +6,20 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DatabaseManager {
+
+    // Database connection details
     private static final String URL = "jdbc:mariadb://localhost:3306/balance_db";
     private static final String USER = "root";
     private static final String PASSWORD = "database";
 
+    // Returns a connection to the database
     public static Connection getConnection() throws SQLException {
         return DriverManager.getConnection(URL, USER, PASSWORD);
     }
 
-
+    // Ensures the monthly table exists in the database (creates it if it doesn't)
     public void ensureMonthlyTable(LocalDate date) {
-        String tableName = formatMonthName(LocalDate.now());
+        String tableName = formatMonthName(LocalDate.now()); // Format table name based on current date
         String sql = "CREATE TABLE IF NOT EXISTS " + tableName + " ("
                 + "id INT AUTO_INCREMENT PRIMARY KEY, "
                 + "entry_date DATE NOT NULL UNIQUE, "
@@ -26,29 +29,32 @@ public class DatabaseManager {
                 + ")";
         try (Connection conn = DatabaseManager.getConnection();
              Statement stmt = conn.createStatement()) {
-            stmt.execute(sql);
+            stmt.execute(sql); // Execute the SQL to create table if it doesn't exist
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 
+    // Formats the table name as "month_yy" (e.g., june_25)
     public String formatMonthName(LocalDate date) {
-        String month = date.getMonth().toString().toLowerCase(); // e.g. "MAY" → "may"
-        int year = date.getYear() % 100; // e.g. 2025 → 25
+        String month = date.getMonth().toString().toLowerCase(); // Convert month to lowercase
+        int year = date.getYear() % 100; // Get last 2 digits of year
         return month + "_" + year;
     }
 
-
+    // Static version of table name formatter
     public static String getMonthlyTableName(LocalDate date) {
         String month = date.getMonth().toString().toLowerCase();  // e.g., "june"
-        String yearTwoDigits = String.valueOf(date.getYear()).substring(2); // last two digits, e.g., "25"
-        return month + "_" + yearTwoDigits;  // e.g., "june_25"
+        String yearTwoDigits = String.valueOf(date.getYear()).substring(2); // Get "25" from "2025"
+        return month + "_" + yearTwoDigits;  // Return table name like "june_25"
     }
 
+    // Inserts or updates a daily entry in the monthly table
     public void insertDailyEntry(DailyEntry entry) {
-        ensureMonthlyTable(entry.getDate());
+        ensureMonthlyTable(entry.getDate()); // Make sure table for this month exists
         String tableName = formatMonthName(entry.getDate());
 
+        // SQL with ON DUPLICATE KEY UPDATE ensures only one entry per date
         String sql = "INSERT INTO " + tableName + " (entry_date, revenue, expense) " +
                 "VALUES (?, ?, ?) " +
                 "ON DUPLICATE KEY UPDATE revenue = VALUES(revenue), expense = VALUES(expense)";
@@ -58,17 +64,17 @@ public class DatabaseManager {
             stmt.setDate(1, Date.valueOf(entry.getDate()));
             stmt.setDouble(2, entry.getRevenue());
             stmt.setDouble(3, entry.getExpense());
-            stmt.executeUpdate();
+            stmt.executeUpdate(); // Insert or update the entry
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 
-
+    // Retrieves all entries from a specific monthly table
     public List<DailyEntry> getEntriesFromMonthlyTable(String tableName, Component parent) {
         List<DailyEntry> entries = new ArrayList<>();
 
-        // Check if table exists
+        // Show warning if the table does not exist
         if (!doesMonthlyTableExist(tableName)) {
             JOptionPane.showMessageDialog(parent, "Table '" + tableName + "' does not exist.",
                     "Missing Table", JOptionPane.WARNING_MESSAGE);
@@ -81,13 +87,14 @@ public class DatabaseManager {
              PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
 
+            // Loop through result set and create DailyEntry objects
             while (rs.next()) {
                 LocalDate date = rs.getDate("entry_date").toLocalDate();
                 double revenue = rs.getDouble("revenue");
                 double expense = rs.getDouble("expense");
 
                 DailyEntry entry = new DailyEntry(date, revenue, expense);
-                entries.add(entry);
+                entries.add(entry); // Add to list
             }
 
         } catch (SQLException e) {
@@ -99,18 +106,18 @@ public class DatabaseManager {
         return entries;
     }
 
+    // Checks if a specific monthly table exists in the database
     public boolean doesMonthlyTableExist(String tableName) {
         String sql = "SHOW TABLES LIKE ?";
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, tableName);
+            stmt.setString(1, tableName); // Bind table name
             ResultSet rs = stmt.executeQuery();
-            return rs.next(); // true if table exists
+            return rs.next(); // Return true if table exists
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
         }
     }
-
 
 }
