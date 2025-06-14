@@ -15,7 +15,7 @@ public class main {
             int choice = JOptionPane.showOptionDialog(
                     null,               // Parent component (null means center on screen)
                     null,                     // Message (none in this case)
-                    "Shop menu",        // Title of the dialog
+                    "Balance app menu",        // Title of the dialog
                     JOptionPane.DEFAULT_OPTION, // Type of options
                     JOptionPane.PLAIN_MESSAGE,  // No icon
                     null,                  // No custom icon
