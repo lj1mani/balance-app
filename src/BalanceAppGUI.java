@@ -9,18 +9,18 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.List;
-import java.util.ArrayList;
 import java.time.format.DateTimeFormatter;
 import javax.swing.JFormattedTextField.AbstractFormatter;
 import javax.swing.table.DefaultTableCellRenderer;
+
 
 public class BalanceAppGUI {
 
     // Shows a dialog for inserting a new balance entry (date, revenue, expense)
     public void showInsertBalanceDialog() {
-        // Setup the date picker component
+        // Date Picker Setup
         UtilDateModel model = new UtilDateModel();
-        model.setValue(new Date()); // Default to today's date
+        model.setValue(new Date());
         Properties p = new Properties();
         p.put("text.today", "Today");
         p.put("text.month", "Month");
@@ -28,48 +28,70 @@ public class BalanceAppGUI {
         JDatePanelImpl datePanel = new JDatePanelImpl(model, p);
         JDatePickerImpl datePicker = new JDatePickerImpl(datePanel, new DateLabelFormatter());
 
-        // Input fields for revenue and expense
-        JTextField revenueField = new JTextField();
-        JTextField expenseField = new JTextField();
 
-        // Build the input form
-        JPanel panel = new JPanel(new GridLayout(3, 2));
-        panel.add(new JLabel("Select Date:"));
-        panel.add(datePicker);
-        panel.add(new JLabel("Revenue:"));
-        panel.add(revenueField);
-        panel.add(new JLabel("Expense:"));
-        panel.add(expenseField);
+        JFormattedTextField revenueField = new JFormattedTextField();
+        revenueField.setColumns(10);
+        JFormattedTextField expenseField = new JFormattedTextField();
+        expenseField.setColumns(10);
 
-        // Show confirmation dialog with the input form
-        int result = JOptionPane.showConfirmDialog(null, panel, "Insert Balance Entry",
-                JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+        // Panel layout
+        JPanel inputPanel = new JPanel(new GridBagLayout());
+        inputPanel.setBorder(BorderFactory.createTitledBorder("Insert Daily Balance"));
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.anchor = GridBagConstraints.WEST;
+
+        gbc.gridx = 0; gbc.gridy = 0;
+        inputPanel.add(new JLabel("Select Date:"), gbc);
+        gbc.gridx = 1;
+        inputPanel.add(datePicker, gbc);
+
+        gbc.gridx = 0; gbc.gridy = 1;
+        inputPanel.add(new JLabel("Revenue (€):"), gbc);
+        gbc.gridx = 1;
+        inputPanel.add(revenueField, gbc);
+
+        gbc.gridx = 0; gbc.gridy = 2;
+        inputPanel.add(new JLabel("Expense (€):"), gbc);
+        gbc.gridx = 1;
+        inputPanel.add(expenseField, gbc);
+
+        // Show dialog
+        int result = JOptionPane.showConfirmDialog(
+                null,
+                inputPanel,
+                "Insert Balance Entry",
+                JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.PLAIN_MESSAGE
+        );
 
         if (result == JOptionPane.OK_OPTION) {
             try {
-                // Get selected date
                 Date selectedDate = (Date) datePicker.getModel().getValue();
                 if (selectedDate == null) throw new Exception("Date is required");
 
-                // Convert date to LocalDate
                 LocalDate date = selectedDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
 
-                // Parse revenue and expense values
-                double revenue = Double.parseDouble(revenueField.getText());
-                double expense = Double.parseDouble(expenseField.getText());
+                String revenueText = revenueField.getText().trim();
+                String expenseText = expenseField.getText().trim();
+                if (revenueText.isEmpty() || expenseText.isEmpty()) {
+                    throw new Exception("Both revenue and expense must be entered.");
+                }
 
-                // Create entry and insert into DB
+                double revenue = Double.parseDouble(revenueText.replace(",", ""));
+                double expense = Double.parseDouble(expenseText.replace(",", ""));
+
                 DailyEntry entry = new DailyEntry(date, revenue, expense);
                 DatabaseManager db = new DatabaseManager();
                 db.insertDailyEntry(entry);
 
-                JOptionPane.showMessageDialog(null, "Entry saved successfully.");
+                JOptionPane.showMessageDialog(null, "Entry saved successfully.", "Success", JOptionPane.INFORMATION_MESSAGE);
             } catch (Exception e) {
-                // Show error if input is invalid
                 JOptionPane.showMessageDialog(null, "Error: " + e.getMessage(), "Input Error", JOptionPane.ERROR_MESSAGE);
             }
         }
     }
+
 
     // Formatter class to handle display and parsing of date in "dd.MM.yyyy" format
     public class DateLabelFormatter extends AbstractFormatter {
@@ -174,49 +196,48 @@ public class BalanceAppGUI {
     }
 
     public void showMonthlyProfitSummary() {
-        // Array of month names for the dropdown menu
+
+        // Month names
         String[] months = {
                 "January", "February", "March", "April", "May", "June",
                 "July", "August", "September", "October", "November", "December"
         };
 
-        // Combo box for month selection
+        // Create styled combo and spinner
         JComboBox<String> monthCombo = new JComboBox<>(months);
-
-        // Spinner for selecting the year (from 2000 to 2100)
         SpinnerNumberModel yearModel = new SpinnerNumberModel(LocalDate.now().getYear(), 2000, 2100, 1);
         JSpinner yearSpinner = new JSpinner(yearModel);
+        yearSpinner.setEditor(new JSpinner.NumberEditor(yearSpinner, "####"));
 
-        // Ensure the year is displayed as 4 digits (e.g. 2025 instead of 2.025)
-        JSpinner.NumberEditor editor = new JSpinner.NumberEditor(yearSpinner, "####");
-        yearSpinner.setEditor(editor);
+        // Build modern input form
+        JPanel inputPanel = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(8, 8, 8, 8);
+        gbc.anchor = GridBagConstraints.WEST;
 
-        // Build input panel for the dialog
-        JPanel panel = new JPanel(new GridLayout(2, 2));
-        panel.add(new JLabel("Select Month:"));
-        panel.add(monthCombo);
-        panel.add(new JLabel("Select Year:"));
-        panel.add(yearSpinner);
+        gbc.gridx = 0; gbc.gridy = 0;
+        inputPanel.add(new JLabel("Select Month:"), gbc);
+        gbc.gridx = 1;
+        inputPanel.add(monthCombo, gbc);
 
-        // Show a dialog for user to pick month and year
-        int result = JOptionPane.showConfirmDialog(null, panel, "Select Month and Year",
+        gbc.gridx = 0; gbc.gridy = 1;
+        inputPanel.add(new JLabel("Select Year:"), gbc);
+        gbc.gridx = 1;
+        inputPanel.add(yearSpinner, gbc);
+
+        int result = JOptionPane.showConfirmDialog(null, inputPanel, "Select Month and Year",
                 JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
 
-        // If user cancels, exit method
         if (result != JOptionPane.OK_OPTION) return;
 
-        // Get selected month and year
-        int selectedMonth = monthCombo.getSelectedIndex() + 1; // JComboBox index starts from 0
+        // Get selected values
+        int selectedMonth = monthCombo.getSelectedIndex() + 1;
         int selectedYear = (Integer) yearSpinner.getValue();
         LocalDate selectedDate = LocalDate.of(selectedYear, selectedMonth, 1);
-
-        // Format table name (e.g. "june_25") based on selected date
         String tableName = DatabaseManager.getMonthlyTableName(selectedDate);
 
-        // Create instance of DatabaseManager
         DatabaseManager db = new DatabaseManager();
 
-        // Check if the table for selected month/year exists
         if (!db.doesMonthlyTableExist(tableName)) {
             JOptionPane.showMessageDialog(null,
                     "Table for " + months[selectedMonth - 1] + " " + selectedYear + " does not exist.",
@@ -224,20 +245,34 @@ public class BalanceAppGUI {
             return;
         }
 
-        // Fetch total profit from the database for the selected table
         Double totalProfit = db.getTotalProfitFromTable(tableName);
 
-        // If profit is found, show result, otherwise show error message
         if (totalProfit != null) {
-            JOptionPane.showMessageDialog(null,
-                    "Total Profit for " + months[selectedMonth - 1] + " " + selectedYear + " is: " + totalProfit + " €",
-                    "Monthly Profit Summary",
+            // Create a styled label to show the result with color
+            JLabel profitLabel = new JLabel();
+            profitLabel.setFont(new Font("Segoe UI", Font.BOLD, 16));
+            profitLabel.setHorizontalAlignment(SwingConstants.CENTER);
+
+            String profitColor = totalProfit >= 0 ? "green" : "red";
+            String profitText = String.format(
+                    "<html><div style='text-align:center;'>Total Profit for <b>%s %d</b><br>" +
+                            "<span style='color:%s;'>%.2f €</span></div></html>",
+                    months[selectedMonth - 1], selectedYear, profitColor, totalProfit
+            );
+
+            profitLabel.setText(profitText);
+
+            // Wrap label in panel for margin
+            JPanel profitPanel = new JPanel(new BorderLayout());
+            profitPanel.setBorder(BorderFactory.createEmptyBorder(15, 30, 15, 30));
+            profitPanel.add(profitLabel, BorderLayout.CENTER);
+
+            JOptionPane.showMessageDialog(null, profitPanel, "Monthly Profit Summary",
                     JOptionPane.INFORMATION_MESSAGE);
         } else {
             JOptionPane.showMessageDialog(null,
                     "Could not retrieve profit data for the selected month.",
-                    "Data Error",
-                    JOptionPane.ERROR_MESSAGE);
+                    "Data Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 

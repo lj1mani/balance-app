@@ -1,9 +1,16 @@
 import javax.swing.*;
+import com.formdev.flatlaf.FlatLightLaf;
 
 public class main {
     public static void main(String[] args) {
 
         BalanceAppGUI balanceGUI = new BalanceAppGUI();
+
+        try {
+            UIManager.setLookAndFeel(new FlatLightLaf());
+        } catch (Exception e) {
+            System.err.println("Failed to initialize FlatLaf.");
+        }
 
         // Menu options for the user to choose from
         String[] options = {"Insert daily", "SUM for month", "Show balance"};
