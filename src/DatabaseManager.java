@@ -19,7 +19,7 @@ public class DatabaseManager {
 
     // Ensures the monthly table exists in the database (creates it if it doesn't)
     public void ensureMonthlyTable(LocalDate date) {
-        String tableName = formatMonthName(LocalDate.now()); // Format table name based on current date
+        String tableName = formatMonthName(date); // Format table name based on current date
         String sql = "CREATE TABLE IF NOT EXISTS " + tableName + " ("
                 + "id INT AUTO_INCREMENT PRIMARY KEY, "
                 + "entry_date DATE NOT NULL UNIQUE, "
@@ -51,8 +51,10 @@ public class DatabaseManager {
 
     // Inserts or updates a daily entry in the monthly table
     public void insertDailyEntry(DailyEntry entry) {
+
         ensureMonthlyTable(entry.getDate()); // Make sure table for this month exists
         String tableName = formatMonthName(entry.getDate());
+        doesMonthlyTableExist(tableName);
 
         // SQL with ON DUPLICATE KEY UPDATE ensures only one entry per date
         String sql = "INSERT INTO " + tableName + " (entry_date, revenue, expense) " +
