@@ -5,13 +5,11 @@ import org.jdatepicker.impl.*;
 
 import java.time.YearMonth;
 import java.time.ZoneId;
-import java.util.Date;
-import java.util.Properties;
+import java.util.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.List;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.stream.IntStream;
 import javax.swing.JFormattedTextField.AbstractFormatter;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -198,6 +196,68 @@ public class BalanceAppGUI {
                 JOptionPane.INFORMATION_MESSAGE);
     }
 
+    public void showMonthlyBalanceTable2(String tableName) {
+        DatabaseManager db = new DatabaseManager();
+        List<DailyEntry> entries = db.getEntriesFromMonthlyTable(tableName, null);
+
+        if (entries.isEmpty()) {
+            JOptionPane.showMessageDialog(null, "No entries found or table '" + tableName + "' does not exist.");
+            return;
+        }
+
+        // Convert "may_25" -> "May 2025"
+        String[] parts = tableName.split("_");
+        String month = parts[0];
+        int yearSuffix = Integer.parseInt(parts[1]);
+        int fullYear = 2000 + yearSuffix;
+        String formattedMonth = month.substring(0, 1).toUpperCase() + month.substring(1);
+        String title = formattedMonth + " " + fullYear;
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d. M. yyyy");
+        String[] columnNames = {"Date", "Revenue", "Expense", "Profit"};
+        Object[][] data = new Object[entries.size()][4];
+
+        for (int i = 0; i < entries.size(); i++) {
+            DailyEntry e = entries.get(i);
+            data[i][0] = e.getDate().format(formatter);
+            data[i][1] = e.getRevenue();
+            data[i][2] = e.getExpense();
+            data[i][3] = e.getProfit();
+        }
+
+        JTable table = new JTable(data, columnNames);
+
+        // Custom renderer for Profit column
+        table.getColumnModel().getColumn(3).setCellRenderer(new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value,
+                                                           boolean isSelected, boolean hasFocus,
+                                                           int row, int column) {
+                Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                if (value instanceof Number) {
+                    double profit = ((Number) value).doubleValue();
+                    if (profit > 0) {
+                        c.setForeground(new Color(0, 128, 0)); // Green
+                    } else if (profit < 0) {
+                        c.setForeground(Color.RED); // Red
+                    } else {
+                        c.setForeground(Color.BLACK); // Zero
+                    }
+                } else {
+                    c.setForeground(Color.BLACK); // Default
+                }
+                return c;
+            }
+        });
+
+        JScrollPane scrollPane = new JScrollPane(table);
+        table.setFillsViewportHeight(true);
+
+        JOptionPane.showMessageDialog(null, scrollPane,
+                "Balance for " + title,
+                JOptionPane.INFORMATION_MESSAGE);
+    }
+
     public void showMonthlyProfitSummary() {
 
         // Month names
@@ -353,6 +413,52 @@ public class BalanceAppGUI {
 
             } catch (Exception e) {
                 JOptionPane.showMessageDialog(null, "Error: " + e.getMessage(), "Input Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
+
+    public void showAvailableMonthsPanel() {
+        DatabaseManager db = new DatabaseManager();
+        List<String> tables = db.getExistingMonthlyTables();
+
+        if (tables.isEmpty()) {
+            JOptionPane.showMessageDialog(null, "No months with data found.");
+            return;
+        }
+
+        // Convert table names into formatted names for display
+        DefaultListModel<String> listModel = new DefaultListModel<>();
+        Map<String, String> tableMap = new HashMap<>(); // displayName -> tableName
+
+        for (String table : tables) {
+            String formatted = db.formatTableName(table); // e.g. "May 2025"
+            listModel.addElement(formatted);
+            tableMap.put(formatted, table); // store mapping
+        }
+
+        // Create the list
+        JList<String> monthList = new JList<>(listModel);
+        monthList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+
+        JScrollPane scrollPane = new JScrollPane(monthList);
+        scrollPane.setPreferredSize(new Dimension(250, 200));
+
+        int result = JOptionPane.showConfirmDialog(
+                null,
+                scrollPane,
+                "Available Months",
+                JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.PLAIN_MESSAGE
+        );
+
+        if (result == JOptionPane.OK_OPTION) {
+            String selected = monthList.getSelectedValue();
+            if (selected != null) {
+                String tableName = tableMap.get(selected);
+                showMonthlyBalanceTable2(tableName);
+            } else {
+                JOptionPane.showMessageDialog(null, "Please select a month.");
             }
         }
     }

@@ -13,7 +13,7 @@ public class main {
         }
 
         // Menu options for the user to choose from
-        String[] options = {"Insert daily", "SUM for month", "Show balance", "Update"};
+        String[] options = {"Insert daily", "SUM for month", "Show balance", "Update", "All months"};
 
         // Infinite loop to keep showing the menu until user chooses "Exit"
         while (true) {
@@ -52,6 +52,10 @@ public class main {
 
                 case 3:
                     balanceGUI.showUpdateDailyEntryDialog();
+                    break;
+
+                case 4:
+                    balanceGUI.showAvailableMonthsPanel();
                     break;
 
                 default:

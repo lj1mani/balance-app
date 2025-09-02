@@ -3,7 +3,9 @@ import java.awt.*;
 import java.sql.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 public class DatabaseManager {
 
@@ -54,7 +56,7 @@ public class DatabaseManager {
 
         ensureMonthlyTable(entry.getDate()); // Make sure table for this month exists
         String tableName = formatMonthName(entry.getDate());
-        doesMonthlyTableExist(tableName);
+        //doesMonthlyTableExist(tableName);
 
         // SQL with ON DUPLICATE KEY UPDATE ensures only one entry per date
         String sql = "INSERT INTO " + tableName + " (entry_date, revenue, expense) " +
@@ -187,6 +189,44 @@ public class DatabaseManager {
             e.printStackTrace();
             return false;
         }
+    }
+
+        public String formatTableName(String tableName) {
+        try {
+            // Split "may_25" into ["may", "25"]
+            String[] parts = tableName.split("_");
+            String monthName = parts[0];
+            int yearSuffix = Integer.parseInt(parts[1]);
+
+            // Convert suffix into full year (assume 2000+)
+            int year = 2000 + yearSuffix;
+
+            // Capitalize month
+            String formattedMonth = monthName.substring(0, 1).toUpperCase() + monthName.substring(1);
+
+            return formattedMonth + " " + year;
+        } catch (Exception e) {
+            return tableName; // fallback if parsing fails
+        }
+    }
+
+    public List<String> getExistingMonthlyTables() {
+        List<String> tables = new ArrayList<>();
+        String sql = "SHOW TABLES";
+        try (Connection conn = DatabaseManager.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+
+            while (rs.next()) {
+                String tableName = rs.getString(1);
+                if (tableName.matches("^[a-z]+_\\d{2}$")) { // matches may_25, june_25
+                    tables.add(tableName);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return tables;
     }
 }
 
