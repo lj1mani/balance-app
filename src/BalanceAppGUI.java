@@ -41,17 +41,20 @@ public class BalanceAppGUI {
         gbc.insets = new Insets(10, 10, 10, 10);
         gbc.anchor = GridBagConstraints.WEST;
 
-        gbc.gridx = 0; gbc.gridy = 0;
+        gbc.gridx = 0;
+        gbc.gridy = 0;
         inputPanel.add(new JLabel("Select Date:"), gbc);
         gbc.gridx = 1;
         inputPanel.add(datePicker, gbc);
 
-        gbc.gridx = 0; gbc.gridy = 1;
+        gbc.gridx = 0;
+        gbc.gridy = 1;
         inputPanel.add(new JLabel("Revenue (€):"), gbc);
         gbc.gridx = 1;
         inputPanel.add(revenueField, gbc);
 
-        gbc.gridx = 0; gbc.gridy = 2;
+        gbc.gridx = 0;
+        gbc.gridy = 2;
         inputPanel.add(new JLabel("Expense (€):"), gbc);
         gbc.gridx = 1;
         inputPanel.add(expenseField, gbc);
@@ -310,12 +313,14 @@ public class BalanceAppGUI {
         gbc.insets = new Insets(8, 8, 8, 8);
         gbc.anchor = GridBagConstraints.WEST;
 
-        gbc.gridx = 0; gbc.gridy = 0;
+        gbc.gridx = 0;
+        gbc.gridy = 0;
         inputPanel.add(new JLabel("Select Month:"), gbc);
         gbc.gridx = 1;
         inputPanel.add(monthCombo, gbc);
 
-        gbc.gridx = 0; gbc.gridy = 1;
+        gbc.gridx = 0;
+        gbc.gridy = 1;
         inputPanel.add(new JLabel("Select Year:"), gbc);
         gbc.gridx = 1;
         inputPanel.add(yearSpinner, gbc);
@@ -495,6 +500,103 @@ public class BalanceAppGUI {
         }
     }
 
+    public boolean showLoginDialog() {
+        JDialog dialog = new JDialog((Frame) null, "Login", true); // modal
+        dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 
+        // Make full screen
+        dialog.setBounds(GraphicsEnvironment.getLocalGraphicsEnvironment().getMaximumWindowBounds());
+
+        JPanel panel = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.anchor = GridBagConstraints.CENTER;
+
+        JLabel userLabel = new JLabel("Username:");
+        JTextField userField = new JTextField(20);
+        JLabel passLabel = new JLabel("Password:");
+        JPasswordField passField = new JPasswordField(20);
+
+        JButton loginBtn = new JButton("Login");
+        JButton addUserBtn = new JButton("Add User");
+
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        panel.add(userLabel, gbc);
+        gbc.gridx = 1;
+        panel.add(userField, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        panel.add(passLabel, gbc);
+        gbc.gridx = 1;
+        panel.add(passField, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        panel.add(loginBtn, gbc);
+        gbc.gridx = 1;
+        panel.add(addUserBtn, gbc);
+
+        loginBtn.addActionListener(e -> {
+            String username = userField.getText();
+            String password = new String(passField.getPassword());
+            if (DatabaseManager.validateUser(username, password)) {
+                dialog.dispose(); // Close dialog
+            } else {
+                JOptionPane.showMessageDialog(dialog, "Invalid username or password!");
+            }
+        });
+
+        addUserBtn.addActionListener(e -> {
+            showAddUserDialog(dialog); // Pass current dialog as parent
+        });
+
+        dialog.add(panel);
+        dialog.setVisible(true);
+
+        // You can track login success with a field instead of always returning true
+        return true;
+    }
+
+    // Non-static method now
+    private void showAddUserDialog(JDialog parent) {
+        JPanel panel = new JPanel(new GridLayout(3, 2, 10, 10));
+        JTextField newUserField = new JTextField();
+        JPasswordField newPassField = new JPasswordField();
+        JPasswordField confirmPassField = new JPasswordField();
+
+        panel.add(new JLabel("New Username:"));
+        panel.add(newUserField);
+        panel.add(new JLabel("Password:"));
+        panel.add(newPassField);
+        panel.add(new JLabel("Confirm Password:"));
+        panel.add(confirmPassField);
+
+        int result = JOptionPane.showConfirmDialog(parent, panel, "Add New User",
+                JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+
+        if (result == JOptionPane.OK_OPTION) {
+            String username = newUserField.getText().trim();
+            String password = new String(newPassField.getPassword());
+            String confirm = new String(confirmPassField.getPassword());
+
+            if (username.isEmpty() || password.isEmpty()) {
+                JOptionPane.showMessageDialog(parent, "Username and password cannot be empty.", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            if (!password.equals(confirm)) {
+                JOptionPane.showMessageDialog(parent, "Passwords do not match.", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            if (DatabaseManager.addUser(username, password)) {
+                JOptionPane.showMessageDialog(parent, "User added successfully!");
+            } else {
+                JOptionPane.showMessageDialog(parent, "Error adding user (maybe username exists).", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
 
 }

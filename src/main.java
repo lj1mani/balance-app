@@ -15,6 +15,19 @@ public class main {
         // Create your BalanceAppGUI instance
         BalanceAppGUI balanceGUI = new BalanceAppGUI();
 
+        // Keep asking for login until successful or cancelled
+        boolean loggedIn = false;
+        while (!loggedIn) {
+            loggedIn = balanceGUI.showLoginDialog();
+            if (!loggedIn) {
+                int choice = JOptionPane.showConfirmDialog(null, "Try again?", "Login", JOptionPane.YES_NO_OPTION);
+                if (choice != JOptionPane.YES_OPTION) {
+                    System.exit(0); // Exit if user chooses No
+                }
+            }
+        }
+
+
         // Create main frame
         JFrame frame = new JFrame("Balance App Menu");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

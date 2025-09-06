@@ -2,12 +2,12 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.sql.*;
 import java.sql.Date;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.List;
+import java.security.MessageDigest;
 
 public class DatabaseManager {
 
@@ -244,6 +244,53 @@ public class DatabaseManager {
         }
         return tables;
     }
+
+    public static boolean validateUser(String username, String password) {
+        String sql = "SELECT password_hash FROM users WHERE username = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, username);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                String storedHash = rs.getString("password_hash");
+                String inputHash = hashPassword(password);
+                return storedHash.equals(inputHash);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    private static String hashPassword(String password) {
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            byte[] hashedBytes = md.digest(password.getBytes("UTF-8"));
+            StringBuilder sb = new StringBuilder();
+            for (byte b : hashedBytes) {
+                sb.append(String.format("%02x", b));
+            }
+            return sb.toString();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+
+    public static boolean addUser(String username, String password) {
+        String sql = "INSERT INTO users (username, password_hash) VALUES (?, ?)";
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, username);
+            stmt.setString(2, hashPassword(password));
+            return stmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
 }
 
 
