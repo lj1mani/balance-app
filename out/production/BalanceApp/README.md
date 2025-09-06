@@ -88,6 +88,15 @@ Click "Show Monthly Balance"
 Select month and year
 A table will appear with one row per day and calculated profit
 
+## Database Configuration
+
+For security reasons, database credentials are not stored directly in the source code.  
+Instead, they are loaded from a configuration file (`db.properties`).
+
+### 1. Create the Configuration File
+1. In the project root folder, you will find a file named `db.properties.example`.
+2. Make a copy of it and rename it to `db.properties`.
+
 ### Dependencies
 
 Swing – GUI framework

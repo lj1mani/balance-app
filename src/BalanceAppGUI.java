@@ -2,7 +2,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.time.LocalDate;
 import org.jdatepicker.impl.*;
-
 import java.time.YearMonth;
 import java.time.ZoneId;
 import java.util.*;
@@ -114,7 +113,7 @@ public class BalanceAppGUI {
         }
     }
 
-    // Displays the monthly balance entries in a table
+    // Displays the monthly balance entries in a fullscreen table
     public void showMonthlyBalanceTable() {
         String[] months = {
                 "January", "February", "March", "April", "May", "June",
@@ -164,6 +163,9 @@ public class BalanceAppGUI {
         }
 
         JTable table = new JTable(data, columnNames);
+        table.setRowHeight(30);
+        table.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+        table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 18));
 
         // Custom cell renderer for Profit column
         table.getColumnModel().getColumn(3).setCellRenderer(new DefaultTableCellRenderer() {
@@ -189,13 +191,27 @@ public class BalanceAppGUI {
         });
 
         JScrollPane scrollPane = new JScrollPane(table);
-        table.setFillsViewportHeight(true);
 
-        JOptionPane.showMessageDialog(null, scrollPane,
-                "Balance for " + months[selectedMonth - 1] + " " + selectedYear,
-                JOptionPane.INFORMATION_MESSAGE);
+        // Create fullscreen frame
+        JFrame frame = new JFrame("Balance for " + months[selectedMonth - 1] + " " + selectedYear);
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        frame.setExtendedState(JFrame.MAXIMIZED_BOTH); // Fullscreen
+        frame.add(scrollPane, BorderLayout.CENTER);
+
+        // Add close button at bottom
+        JButton closeBtn = new JButton("Close");
+        closeBtn.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        closeBtn.addActionListener(e -> frame.dispose());
+
+        JPanel bottomPanel = new JPanel();
+        bottomPanel.add(closeBtn);
+        frame.add(bottomPanel, BorderLayout.SOUTH);
+
+        frame.setVisible(true);
     }
 
+
+    // Displays the balance for a given table in fullscreen
     public void showMonthlyBalanceTable2(String tableName) {
         DatabaseManager db = new DatabaseManager();
         List<DailyEntry> entries = db.getEntriesFromMonthlyTable(tableName, null);
@@ -226,6 +242,9 @@ public class BalanceAppGUI {
         }
 
         JTable table = new JTable(data, columnNames);
+        table.setRowHeight(30);
+        table.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+        table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 18));
 
         // Custom renderer for Profit column
         table.getColumnModel().getColumn(3).setCellRenderer(new DefaultTableCellRenderer() {
@@ -251,12 +270,25 @@ public class BalanceAppGUI {
         });
 
         JScrollPane scrollPane = new JScrollPane(table);
-        table.setFillsViewportHeight(true);
 
-        JOptionPane.showMessageDialog(null, scrollPane,
-                "Balance for " + title,
-                JOptionPane.INFORMATION_MESSAGE);
+        // Fullscreen frame
+        JFrame frame = new JFrame("Balance for " + title);
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        frame.setExtendedState(JFrame.MAXIMIZED_BOTH); // Fullscreen
+        frame.add(scrollPane, BorderLayout.CENTER);
+
+        // Close button at bottom
+        JButton closeBtn = new JButton("Close");
+        closeBtn.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        closeBtn.addActionListener(e -> frame.dispose());
+
+        JPanel bottomPanel = new JPanel();
+        bottomPanel.add(closeBtn);
+        frame.add(bottomPanel, BorderLayout.SOUTH);
+
+        frame.setVisible(true);
     }
+
 
     public void showMonthlyProfitSummary() {
 
