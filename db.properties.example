@@ -1,3 +1,4 @@
+# copy db.properties.example → rename it to db.properties!!
 # Example database configuration
 db.url=jdbc:mariadb://localhost:3306/your_db_name_here
 db.user=your_user_here
