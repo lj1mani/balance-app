@@ -2,6 +2,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.sql.*;
 import java.sql.Date;
 import java.time.LocalDate;
@@ -10,12 +11,6 @@ import java.util.List;
 
 public class DatabaseManager {
 
-    /*
-    // Database connection details
-    private static final String URL = "jdbc:mariadb://localhost:3306/balance_db";
-    private static final String USER = "root";
-    private static final String PASSWORD = "database";
-*/
     private static final String URL;
     private static final String USER;
     private static final String PASSWORD;
@@ -30,7 +25,7 @@ public class DatabaseManager {
             PASSWORD = props.getProperty("DB_PASSWORD");
         } catch (IOException e) {
             e.printStackTrace();
-            throw new RuntimeException("Could not load database configuration. Please check db.properties.");
+            throw new RuntimeException("Could not load database configuration. Please check db.properties Or Missing db.properties file! Please copy db.properties.example and configure it.");
         }
     }
 

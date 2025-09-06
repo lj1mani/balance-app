@@ -1,0 +1,4 @@
+# Example database configuration
+db.url=jdbc:mariadb://localhost:3306/your_db_name_here
+db.user=your_user_here
+db.password=your_password_here
