@@ -1,9 +1,9 @@
 import javax.swing.*;
 import com.formdev.flatlaf.FlatLightLaf;
-
 import java.awt.*;
 
 public class main {
+
     public static void main(String[] args) {
         // Apply FlatLaf theme
         try {
@@ -12,35 +12,41 @@ public class main {
             System.err.println("Failed to initialize FlatLaf.");
         }
 
-        // Create your BalanceAppGUI instance
         BalanceAppGUI balanceGUI = new BalanceAppGUI();
 
-        // Keep asking for login until successful or cancelled
+        // Show login first
+        if (showLoginLoop(balanceGUI)) {
+            showMainMenu(balanceGUI);
+        }
+    }
+
+    // Show login loop until success or exit
+    private static boolean showLoginLoop(BalanceAppGUI balanceGUI) {
         boolean loggedIn = false;
         while (!loggedIn) {
             loggedIn = balanceGUI.showLoginDialog();
             if (!loggedIn) {
                 int choice = JOptionPane.showConfirmDialog(null, "Try again?", "Login", JOptionPane.YES_NO_OPTION);
                 if (choice != JOptionPane.YES_OPTION) {
-                    System.exit(0); // Exit if user chooses No
+                    return false; // Exit app if user chooses No
                 }
             }
         }
+        return true;
+    }
 
-
-        // Create main frame
+    // Show the main menu
+    public static void showMainMenu(BalanceAppGUI balanceGUI) {
         JFrame frame = new JFrame("Balance App Menu");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         // Make it fullscreen
         frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
-        frame.setUndecorated(false); // keep window controls, set true for pure fullscreen
+        frame.setUndecorated(false);
 
-        // Create panel with GridLayout for buttons
-        JPanel panel = new JPanel(new GridLayout(0, 1, 20, 20)); // vertical list of buttons
+        JPanel panel = new JPanel(new GridLayout(0, 1, 20, 20)); // vertical list
         panel.setBorder(BorderFactory.createEmptyBorder(50, 200, 50, 200));
 
-        // Menu options
         String[] options = {"Insert daily", "SUM for month", "Show balance", "Update", "All months", "Exit"};
 
         for (String option : options) {
@@ -48,7 +54,6 @@ public class main {
             button.setFont(new Font("Segoe UI", Font.BOLD, 18));
             button.setFocusPainted(false);
 
-            // Action listeners
             button.addActionListener(e -> {
                 switch (option) {
                     case "Insert daily":
@@ -67,8 +72,10 @@ public class main {
                         balanceGUI.showAvailableMonthsPanel();
                         break;
                     case "Exit":
-                        JOptionPane.showMessageDialog(frame, "Goodbye!");
-                        System.exit(0);
+                        frame.dispose(); // Close main menu
+                        if (showLoginLoop(balanceGUI)) {
+                            showMainMenu(balanceGUI); // reopen menu after login
+                        }
                         break;
                 }
             });
@@ -80,4 +87,3 @@ public class main {
         frame.setVisible(true);
     }
 }
-

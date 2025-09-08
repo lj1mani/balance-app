@@ -511,6 +511,7 @@ public class BalanceAppGUI {
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(10, 10, 10, 10);
         gbc.anchor = GridBagConstraints.CENTER;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
 
         JLabel userLabel = new JLabel("Username:");
         JTextField userField = new JTextField(20);
@@ -520,24 +521,31 @@ public class BalanceAppGUI {
         JButton loginBtn = new JButton("Login");
         JButton addUserBtn = new JButton("Add User");
 
+        // Username row
         gbc.gridx = 0;
         gbc.gridy = 0;
         panel.add(userLabel, gbc);
         gbc.gridx = 1;
         panel.add(userField, gbc);
 
+        // Password row
         gbc.gridx = 0;
         gbc.gridy = 1;
         panel.add(passLabel, gbc);
         gbc.gridx = 1;
         panel.add(passField, gbc);
 
+        // Button row (centered)
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 0));
+        buttonPanel.add(loginBtn);
+        buttonPanel.add(addUserBtn);
+
         gbc.gridx = 0;
         gbc.gridy = 2;
-        panel.add(loginBtn, gbc);
-        gbc.gridx = 1;
-        panel.add(addUserBtn, gbc);
+        gbc.gridwidth = 2; // span across both columns
+        panel.add(buttonPanel, gbc);
 
+        // Actions
         loginBtn.addActionListener(e -> {
             String username = userField.getText();
             String password = new String(passField.getPassword());
@@ -548,16 +556,14 @@ public class BalanceAppGUI {
             }
         });
 
-        addUserBtn.addActionListener(e -> {
-            showAddUserDialog(dialog); // Pass current dialog as parent
-        });
+        addUserBtn.addActionListener(e -> showAddUserDialog(dialog));
 
         dialog.add(panel);
         dialog.setVisible(true);
 
-        // You can track login success with a field instead of always returning true
         return true;
     }
+
 
     // Non-static method now
     private void showAddUserDialog(JDialog parent) {
