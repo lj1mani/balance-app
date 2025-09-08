@@ -26,10 +26,10 @@ public class main {
         while (!loggedIn) {
             loggedIn = balanceGUI.showLoginDialog();
             if (!loggedIn) {
-                int choice = JOptionPane.showConfirmDialog(null, "Try again?", "Login", JOptionPane.YES_NO_OPTION);
-                if (choice != JOptionPane.YES_OPTION) {
+                //int choice = JOptionPane.showConfirmDialog(null, "Try again?", "Login", JOptionPane.YES_NO_OPTION);
+                //if (choice != JOptionPane.YES_OPTION) {
                     return false; // Exit app if user chooses No
-                }
+                //}
             }
         }
         return true;
@@ -47,7 +47,7 @@ public class main {
         JPanel panel = new JPanel(new GridLayout(0, 1, 20, 20)); // vertical list
         panel.setBorder(BorderFactory.createEmptyBorder(50, 200, 50, 200));
 
-        String[] options = {"Insert daily", "SUM for month", "Show balance", "Update", "All months", "Exit"};
+        String[] options = {"Insert daily", "SUM for month", "Show balance", "Update", "All months", "Logout"};
 
         for (String option : options) {
             JButton button = new JButton(option);
@@ -71,7 +71,7 @@ public class main {
                     case "All months":
                         balanceGUI.showAvailableMonthsPanel();
                         break;
-                    case "Exit":
+                    case "Logout":
                         frame.dispose(); // Close main menu
                         if (showLoginLoop(balanceGUI)) {
                             showMainMenu(balanceGUI); // reopen menu after login

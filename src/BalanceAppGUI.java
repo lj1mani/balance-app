@@ -501,17 +501,18 @@ public class BalanceAppGUI {
     }
 
     public boolean showLoginDialog() {
-        JDialog dialog = new JDialog((Frame) null, "Login", true); // modal
+        final boolean[] loginSuccess = {false};
+
+        JDialog dialog = new JDialog((Frame) null, "Login", true);
         dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 
-        // Make full screen
+        // Full screen
         dialog.setBounds(GraphicsEnvironment.getLocalGraphicsEnvironment().getMaximumWindowBounds());
 
         JPanel panel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(10, 10, 10, 10);
         gbc.anchor = GridBagConstraints.CENTER;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
 
         JLabel userLabel = new JLabel("Username:");
         JTextField userField = new JTextField(20);
@@ -521,47 +522,49 @@ public class BalanceAppGUI {
         JButton loginBtn = new JButton("Login");
         JButton addUserBtn = new JButton("Add User");
 
-        // Username row
-        gbc.gridx = 0;
-        gbc.gridy = 0;
+        gbc.gridx = 0; gbc.gridy = 0;
         panel.add(userLabel, gbc);
         gbc.gridx = 1;
         panel.add(userField, gbc);
 
-        // Password row
-        gbc.gridx = 0;
-        gbc.gridy = 1;
+        gbc.gridx = 0; gbc.gridy = 1;
         panel.add(passLabel, gbc);
         gbc.gridx = 1;
         panel.add(passField, gbc);
 
-        // Button row (centered)
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 0));
-        buttonPanel.add(loginBtn);
-        buttonPanel.add(addUserBtn);
+        gbc.gridx = 0; gbc.gridy = 2;
+        panel.add(loginBtn, gbc);
+        gbc.gridx = 1;
+        panel.add(addUserBtn, gbc);
 
-        gbc.gridx = 0;
-        gbc.gridy = 2;
-        gbc.gridwidth = 2; // span across both columns
-        panel.add(buttonPanel, gbc);
-
-        // Actions
         loginBtn.addActionListener(e -> {
             String username = userField.getText();
             String password = new String(passField.getPassword());
             if (DatabaseManager.validateUser(username, password)) {
-                dialog.dispose(); // Close dialog
+                loginSuccess[0] = true;
+                dialog.dispose();
             } else {
                 JOptionPane.showMessageDialog(dialog, "Invalid username or password!");
             }
         });
 
-        addUserBtn.addActionListener(e -> showAddUserDialog(dialog));
+        addUserBtn.addActionListener(e -> {
+            showAddUserDialog(dialog);
+        });
 
         dialog.add(panel);
+
+        // If user clicks X -> treat as cancel -> exit application
+        dialog.addWindowListener(new java.awt.event.WindowAdapter() {
+            @Override
+            public void windowClosing(java.awt.event.WindowEvent e) {
+                loginSuccess[0] = false;
+            }
+        });
+
         dialog.setVisible(true);
 
-        return true;
+        return loginSuccess[0];
     }
 
 
