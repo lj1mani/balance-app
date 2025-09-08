@@ -106,5 +106,86 @@ java.time.* – for date handling
 To use the date picker, make sure you include this dependency in your project (or add the .jar manually):
 jdatepicker-1.3.4.jar
 
+### Methods used
+
+#### BalanceAppGUI Methods
+
+- **showInsertBalanceDialog()**
+Displays a dialog for inserting a new daily balance entry with date, revenue, and expense. Validates input and saves it to the database.
+----
+- **DateLabelFormatter (inner class)**
+Custom formatter for date pickers, converting between String and Date in the format dd.MM.yyyy.
+-----
+- **showMonthlyBalanceTable()**
+Shows a fullscreen table with all daily balance entries for a selected month and year. Colors profit values green/red depending on positive/negative.
+----
+- **showMonthlyBalanceTable2(String tableName)**
+Shows a fullscreen table for a specific monthly table name. Similar to showMonthlyBalanceTable() but accepts a table name directly.
+----
+- **showMonthlyProfitSummary()**
+Displays a summary of total profit for a selected month and year. Positive profits are shown in green, negative in red.
+----
+- **showUpdateDailyEntryDialog()**
+Displays a dialog to update an existing daily balance entry for a selected date. Validates input and updates the database.
+-----
+- **showAvailableMonthsPanel()**
+Shows a list of months for which balance data exists. Allows the user to select one and view the corresponding table.
+----
+- **showLoginFrame()**
+Displays a fullscreen login frame with fields for username and password. Includes buttons to log in or add a new user. Returns true if login succeeds.
+-----
+- **showAddUserDialog(JFrame parent)**
+-------
+
+#### DatabaseManager Methods
+
+- **getConnection()**
+Returns a new database connection using credentials from db.properties.
+-----
+- **ensureMonthlyTable(LocalDate date)**
+Ensures a monthly table exists for the given date; creates it if it doesn’t exist.
+-----
+- **formatMonthName(LocalDate date)**
+Formats a date into a table name like "june_25" for storing monthly entries.
+-----
+- **getMonthlyTableName(LocalDate date)**
+Static method to generate a monthly table name like "june_25" for a given date.
+-----
+- **insertDailyEntry(DailyEntry entry)**
+Inserts or updates a daily entry (date, revenue, expense) in the monthly table.
+-----
+- **insertDailyEntry2(DailyEntry entry)**
+Dummy/test method returning true/false to simulate insertion success.
+------
+- **getEntriesFromMonthlyTable(String tableName, Component parent)**
+Retrieves all daily entries from a specified monthly table; shows a warning if the table doesn’t exist.
+----
+- **doesMonthlyTableExist(String tableName)**
+Checks whether a specific monthly table exists in the database.
+----
+- **getTotalProfitFromTable(String tableName)**
+Returns the total profit for a given monthly table.
+------
+- **getDailyEntry(LocalDate date)**
+Fetches a daily entry for a given date from the current month’s table.
+-----
+- **updateEntryInMonthlyTable(DailyEntry entry, String tableName)**
+Updates revenue and expense values for a given daily entry in the specified table.
+-----
+- **formatTableName(String tableName)**
+Converts a table name like "may_25" into a readable format "May 2025".
+------
+- **getExistingMonthlyTables()**
+Returns a list of all existing monthly tables in the database.
+------
+- **validateUser(String username, String password)**
+Verifies if the provided username and password match a user in the database.
+-----
+- **hashPassword(String password)**
+Hashes a password using SHA-256 for secure storage.
+-----
+- **addUser(String username, String password)**
+Adds a new user to the database with a hashed password.
+--------
 
 
