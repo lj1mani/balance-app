@@ -14,9 +14,23 @@ public class main {
 
         BalanceAppGUI balanceGUI = new BalanceAppGUI();
 
-        // Show login first
-        if (showLoginLoop(balanceGUI)) {
-            showMainMenu(balanceGUI);
+        while (true) {
+            // 1. Show login frame
+            boolean loggedIn = balanceGUI.showLoginFrame();
+
+            if (!loggedIn) {
+                // User pressed cancel/closed window
+                System.exit(0);
+            }
+
+            // 2. Show main menu after successful login
+            boolean logout = showMainMenu(balanceGUI);
+
+            if (!logout) {
+                // Exit chosen
+                System.exit(0);
+            }
+            // else -> loop restarts and login is shown again
         }
     }
 
@@ -24,7 +38,7 @@ public class main {
     private static boolean showLoginLoop(BalanceAppGUI balanceGUI) {
         boolean loggedIn = false;
         while (!loggedIn) {
-            loggedIn = balanceGUI.showLoginDialog();
+            loggedIn = balanceGUI.showLoginFrame();
             if (!loggedIn) {
                 //int choice = JOptionPane.showConfirmDialog(null, "Try again?", "Login", JOptionPane.YES_NO_OPTION);
                 //if (choice != JOptionPane.YES_OPTION) {
@@ -36,7 +50,7 @@ public class main {
     }
 
     // Show the main menu
-    public static void showMainMenu(BalanceAppGUI balanceGUI) {
+    private static boolean showMainMenu(BalanceAppGUI balanceGUI) {
         JFrame frame = new JFrame("Balance App Menu");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
@@ -52,6 +66,9 @@ public class main {
         for (String option : options) {
             JButton button = new JButton(option);
             button.setFont(new Font("Segoe UI", Font.BOLD, 18));
+
+            final boolean[] logout = {false};
+
             button.setFocusPainted(false);
 
             button.addActionListener(e -> {
@@ -72,10 +89,8 @@ public class main {
                         balanceGUI.showAvailableMonthsPanel();
                         break;
                     case "Logout":
-                        frame.dispose(); // Close main menu
-                        if (showLoginLoop(balanceGUI)) {
-                            showMainMenu(balanceGUI); // reopen menu after login
-                        }
+                        logout[0] = true;
+                        frame.dispose();
                         break;
                 }
             });
@@ -85,5 +100,14 @@ public class main {
 
         frame.add(panel, BorderLayout.CENTER);
         frame.setVisible(true);
+
+        while (frame.isDisplayable()) {
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException ignored) {}
+        }
+
+        return true;
+
     }
 }

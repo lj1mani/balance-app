@@ -11,6 +11,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.IntStream;
 import javax.swing.JFormattedTextField.AbstractFormatter;
+import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 
 
@@ -500,76 +501,128 @@ public class BalanceAppGUI {
         }
     }
 
-    public boolean showLoginDialog() {
+    public boolean showLoginFrame() {
         final boolean[] loginSuccess = {false};
 
-        JDialog dialog = new JDialog((Frame) null, "Login", true);
-        dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+        JFrame frame = new JFrame("Login");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setExtendedState(JFrame.MAXIMIZED_BOTH); // Full screen
+        frame.setLayout(new GridBagLayout()); // Center background
 
-        // Full screen
-        dialog.setBounds(GraphicsEnvironment.getLocalGraphicsEnvironment().getMaximumWindowBounds());
+        // Background panel
+        JPanel background = new JPanel(new GridBagLayout());
+        background.setBackground(new Color(245, 245, 245)); // Light gray
 
-        JPanel panel = new JPanel(new GridBagLayout());
+        // Card panel (white box with padding + border)
+        JPanel card = new JPanel(new GridBagLayout());
+        card.setBackground(Color.WHITE);
+        card.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(220, 220, 220), 1),
+                new EmptyBorder(30, 40, 30, 40)
+        ));
+
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(10, 10, 10, 10);
-        gbc.anchor = GridBagConstraints.CENTER;
+        gbc.insets = new Insets(12, 12, 12, 12);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridwidth = 2;
 
-        JLabel userLabel = new JLabel("Username:");
-        JTextField userField = new JTextField(20);
-        JLabel passLabel = new JLabel("Password:");
-        JPasswordField passField = new JPasswordField(20);
+        // Title
+        JLabel title = new JLabel("Welcome Back", SwingConstants.CENTER);
+        title.setFont(new Font("Segoe UI", Font.BOLD, 20));
+        card.add(title, gbc);
+
+        // Username row
+        gbc.gridy++;
+        gbc.gridwidth = 1;
+        card.add(new JLabel("Username:"), gbc);
+
+        gbc.gridx = 1;
+        JTextField userField = new JTextField(15);
+        card.add(userField, gbc);
+
+        // Password row
+        gbc.gridy++;
+        gbc.gridx = 0;
+        card.add(new JLabel("Password:"), gbc);
+
+        gbc.gridx = 1;
+        JPasswordField passField = new JPasswordField(15);
+        card.add(passField, gbc);
+
+        // Buttons row
+        gbc.gridy++;
+        gbc.gridx = 0;
+        gbc.gridwidth = 2;
+
+        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 25, 0));
+        btnPanel.setOpaque(false);
 
         JButton loginBtn = new JButton("Login");
         JButton addUserBtn = new JButton("Add User");
 
-        gbc.gridx = 0; gbc.gridy = 0;
-        panel.add(userLabel, gbc);
-        gbc.gridx = 1;
-        panel.add(userField, gbc);
+        Dimension btnSize = new Dimension(110, 40);
+        loginBtn.setPreferredSize(btnSize);
+        addUserBtn.setPreferredSize(btnSize);
 
-        gbc.gridx = 0; gbc.gridy = 1;
-        panel.add(passLabel, gbc);
-        gbc.gridx = 1;
-        panel.add(passField, gbc);
+        loginBtn.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        addUserBtn.setFont(new Font("Segoe UI", Font.BOLD, 14));
 
-        gbc.gridx = 0; gbc.gridy = 2;
-        panel.add(loginBtn, gbc);
-        gbc.gridx = 1;
-        panel.add(addUserBtn, gbc);
+        // Style Login button (blue)
+        loginBtn.setBackground(new Color(66, 133, 244));
+        loginBtn.setForeground(Color.WHITE);
+        loginBtn.setFocusPainted(false);
+        loginBtn.setBorderPainted(false);
+        loginBtn.setOpaque(true);
+        loginBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 
+        // Style Add User button (gray)
+        addUserBtn.setBackground(new Color(155, 155, 155));
+        addUserBtn.setForeground(Color.WHITE);
+        addUserBtn.setFocusPainted(false);
+        addUserBtn.setBorderPainted(false);
+        addUserBtn.setOpaque(true);
+        addUserBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+
+        btnPanel.add(loginBtn);
+        btnPanel.add(addUserBtn);
+        card.add(btnPanel, gbc);
+
+        // Add card to background
+        background.add(card);
+
+        frame.add(background);
+        frame.setVisible(true);
+
+        // Login button action
         loginBtn.addActionListener(e -> {
             String username = userField.getText();
             String password = new String(passField.getPassword());
             if (DatabaseManager.validateUser(username, password)) {
                 loginSuccess[0] = true;
-                dialog.dispose();
+                frame.dispose();
             } else {
-                JOptionPane.showMessageDialog(dialog, "Invalid username or password!");
+                JOptionPane.showMessageDialog(frame, "Invalid username or password!");
             }
         });
 
-        addUserBtn.addActionListener(e -> {
-            showAddUserDialog(dialog);
-        });
+        // Add user button
+        addUserBtn.addActionListener(e -> showAddUserDialog(frame));
 
-        dialog.add(panel);
-
-        // If user clicks X -> treat as cancel -> exit application
-        dialog.addWindowListener(new java.awt.event.WindowAdapter() {
-            @Override
-            public void windowClosing(java.awt.event.WindowEvent e) {
-                loginSuccess[0] = false;
-            }
-        });
-
-        dialog.setVisible(true);
+        // Wait until frame is disposed
+        while (frame.isDisplayable()) {
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException ignored) {}
+        }
 
         return loginSuccess[0];
     }
 
 
-    // Non-static method now
-    private void showAddUserDialog(JDialog parent) {
+
+    private void showAddUserDialog(JFrame parent) {
         JPanel panel = new JPanel(new GridLayout(3, 2, 10, 10));
         JTextField newUserField = new JTextField();
         JPasswordField newPassField = new JPasswordField();
