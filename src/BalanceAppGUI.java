@@ -1,5 +1,6 @@
 import javax.swing.*;
 import java.awt.*;
+import java.text.DecimalFormat;
 import java.time.LocalDate;
 import org.jdatepicker.impl.*;
 import java.time.ZoneId;
@@ -128,14 +129,20 @@ public class BalanceAppGUI {
         JSpinner.NumberEditor editor = new JSpinner.NumberEditor(yearSpinner, "####");
         yearSpinner.setEditor(editor);
 
-        JPanel monthPanel = new JPanel(new GridLayout(2, 2));
+        JPanel monthPanel = new JPanel(new GridLayout(2, 2, 10, 10));
+        monthPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         monthPanel.add(new JLabel("Select Month:"));
         monthPanel.add(monthCombo);
         monthPanel.add(new JLabel("Select Year:"));
         monthPanel.add(yearSpinner);
 
-        int result = JOptionPane.showConfirmDialog(null, monthPanel, "Select Month and Year",
-                JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+        int result = JOptionPane.showConfirmDialog(
+                null,
+                monthPanel,
+                "Select Month and Year",
+                JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.PLAIN_MESSAGE
+        );
 
         if (result != JOptionPane.OK_OPTION) return;
 
@@ -153,64 +160,98 @@ public class BalanceAppGUI {
         }
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d. M. yyyy");
-        String[] columnNames = {"Date", "Revenue", "Expense", "Profit"};
+        String[] columnNames = {"Date", "Revenue (€)", "Expense (€)", "Profit (€)"};
         Object[][] data = new Object[entries.size()][4];
+
+        DecimalFormat df = new DecimalFormat("#0.00"); // Always 2 decimals
 
         for (int i = 0; i < entries.size(); i++) {
             DailyEntry e = entries.get(i);
             data[i][0] = e.getDate().format(formatter);
-            data[i][1] = e.getRevenue();
-            data[i][2] = e.getExpense();
-            data[i][3] = e.getProfit();
+            data[i][1] = df.format(e.getRevenue());
+            data[i][2] = df.format(e.getExpense());
+            data[i][3] = df.format(e.getProfit());
         }
 
         JTable table = new JTable(data, columnNames);
         table.setRowHeight(30);
         table.setFont(new Font("Segoe UI", Font.PLAIN, 16));
         table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 18));
+        table.getTableHeader().setBackground(new Color(240, 240, 240));
+        table.getTableHeader().setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
 
-        // Custom cell renderer for Profit column
-        table.getColumnModel().getColumn(3).setCellRenderer(new DefaultTableCellRenderer() {
+        // Alternate row colors (modern look)
+        table.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
             @Override
-            public Component getTableCellRendererComponent(JTable table, Object value,
-                                                           boolean isSelected, boolean hasFocus,
-                                                           int row, int column) {
+            public Component getTableCellRendererComponent(
+                    JTable table, Object value, boolean isSelected,
+                    boolean hasFocus, int row, int column) {
+
                 Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-                if (value instanceof Number) {
-                    double profit = ((Number) value).doubleValue();
-                    if (profit > 0) {
-                        c.setForeground(new Color(0, 128, 0)); // Green
-                    } else if (profit < 0) {
-                        c.setForeground(Color.RED); // Red
+
+                if (!isSelected) {
+                    if (row % 2 == 0) {
+                        c.setBackground(new Color(250, 250, 250)); // light gray
                     } else {
-                        c.setForeground(Color.BLACK); // Zero
+                        c.setBackground(Color.WHITE);
                     }
                 } else {
-                    c.setForeground(Color.BLACK); // Default
+                    c.setBackground(new Color(200, 220, 255)); // highlight blue
                 }
+
+                // Profit column: green/red text
+                if (column == 3 && value instanceof String) {
+                    try {
+                        double profit = Double.parseDouble(((String) value).replace(",", "."));
+                        if (profit > 0) {
+                            c.setForeground(new Color(0, 128, 0)); // green
+                        } else if (profit < 0) {
+                            c.setForeground(Color.RED); // red
+                        } else {
+                            c.setForeground(Color.BLACK);
+                        }
+                    } catch (NumberFormatException ex) {
+                        c.setForeground(Color.BLACK);
+                    }
+                } else {
+                    c.setForeground(Color.BLACK);
+                }
+
+                setHorizontalAlignment(CENTER);
                 return c;
             }
         });
 
         JScrollPane scrollPane = new JScrollPane(table);
 
-        // Create fullscreen frame
+        // === Frame ===
         JFrame frame = new JFrame("Balance for " + months[selectedMonth - 1] + " " + selectedYear);
         frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        frame.setExtendedState(JFrame.MAXIMIZED_BOTH); // Fullscreen
+        frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
+        frame.setLayout(new BorderLayout(20, 20));
+
+        // Add table
         frame.add(scrollPane, BorderLayout.CENTER);
 
-        // Add close button at bottom
+        // Bottom panel with Close button
         JButton closeBtn = new JButton("Close");
         closeBtn.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        closeBtn.setBackground(new Color(66, 133, 244));
+        closeBtn.setForeground(Color.WHITE);
+        closeBtn.setFocusPainted(false);
+        closeBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+
         closeBtn.addActionListener(e -> frame.dispose());
 
         JPanel bottomPanel = new JPanel();
+        bottomPanel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
         bottomPanel.add(closeBtn);
+
         frame.add(bottomPanel, BorderLayout.SOUTH);
 
         frame.setVisible(true);
     }
+
 
 
     // Displays the balance for a given table in fullscreen
@@ -232,64 +273,91 @@ public class BalanceAppGUI {
         String title = formattedMonth + " " + fullYear;
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d. M. yyyy");
-        String[] columnNames = {"Date", "Revenue", "Expense", "Profit"};
+        String[] columnNames = {"Date", "Revenue (€)", "Expense (€)", "Profit (€)"};
         Object[][] data = new Object[entries.size()][4];
+
+        DecimalFormat df = new DecimalFormat("#0.00"); // Always 2 decimals
 
         for (int i = 0; i < entries.size(); i++) {
             DailyEntry e = entries.get(i);
             data[i][0] = e.getDate().format(formatter);
-            data[i][1] = e.getRevenue();
-            data[i][2] = e.getExpense();
-            data[i][3] = e.getProfit();
+            data[i][1] = df.format(e.getRevenue());
+            data[i][2] = df.format(e.getExpense());
+            data[i][3] = df.format(e.getProfit());
         }
 
         JTable table = new JTable(data, columnNames);
         table.setRowHeight(30);
         table.setFont(new Font("Segoe UI", Font.PLAIN, 16));
         table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 18));
+        table.getTableHeader().setBackground(new Color(240, 240, 240));
+        table.getTableHeader().setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
 
-        // Custom renderer for Profit column
-        table.getColumnModel().getColumn(3).setCellRenderer(new DefaultTableCellRenderer() {
+        // Zebra rows + profit coloring
+        table.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
             @Override
-            public Component getTableCellRendererComponent(JTable table, Object value,
-                                                           boolean isSelected, boolean hasFocus,
-                                                           int row, int column) {
+            public Component getTableCellRendererComponent(
+                    JTable table, Object value, boolean isSelected,
+                    boolean hasFocus, int row, int column) {
+
                 Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-                if (value instanceof Number) {
-                    double profit = ((Number) value).doubleValue();
-                    if (profit > 0) {
-                        c.setForeground(new Color(0, 128, 0)); // Green
-                    } else if (profit < 0) {
-                        c.setForeground(Color.RED); // Red
-                    } else {
-                        c.setForeground(Color.BLACK); // Zero
+
+                if (!isSelected) {
+                    c.setBackground(row % 2 == 0 ? new Color(250, 250, 250) : Color.WHITE);
+                } else {
+                    c.setBackground(new Color(200, 220, 255)); // light blue
+                }
+
+                // Profit column → red/green/black
+                if (column == 3 && value instanceof String) {
+                    try {
+                        double profit = Double.parseDouble(((String) value).replace(",", "."));
+                        if (profit > 0) {
+                            c.setForeground(new Color(0, 128, 0)); // green
+                        } else if (profit < 0) {
+                            c.setForeground(Color.RED); // red
+                        } else {
+                            c.setForeground(Color.BLACK);
+                        }
+                    } catch (NumberFormatException ex) {
+                        c.setForeground(Color.BLACK);
                     }
                 } else {
-                    c.setForeground(Color.BLACK); // Default
+                    c.setForeground(Color.BLACK);
                 }
+
+                setHorizontalAlignment(CENTER);
                 return c;
             }
         });
 
         JScrollPane scrollPane = new JScrollPane(table);
 
-        // Fullscreen frame
+        // === Frame ===
         JFrame frame = new JFrame("Balance for " + title);
         frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        frame.setExtendedState(JFrame.MAXIMIZED_BOTH); // Fullscreen
+        frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
+        frame.setLayout(new BorderLayout(20, 20));
         frame.add(scrollPane, BorderLayout.CENTER);
 
-        // Close button at bottom
+        // Close button
         JButton closeBtn = new JButton("Close");
         closeBtn.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        closeBtn.setBackground(new Color(66, 133, 244));
+        closeBtn.setForeground(Color.WHITE);
+        closeBtn.setFocusPainted(false);
+        closeBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         closeBtn.addActionListener(e -> frame.dispose());
 
         JPanel bottomPanel = new JPanel();
+        bottomPanel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
         bottomPanel.add(closeBtn);
+
         frame.add(bottomPanel, BorderLayout.SOUTH);
 
         frame.setVisible(true);
     }
+
 
 
     public void showMonthlyProfitSummary() {
