@@ -2,14 +2,12 @@ import javax.swing.*;
 import java.awt.*;
 import java.time.LocalDate;
 import org.jdatepicker.impl.*;
-import java.time.YearMonth;
 import java.time.ZoneId;
 import java.util.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.stream.IntStream;
 import javax.swing.JFormattedTextField.AbstractFormatter;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -501,8 +499,9 @@ public class BalanceAppGUI {
         }
     }
 
-    public boolean showLoginFrame() {
-        final boolean[] loginSuccess = {false};
+    public String showLoginFrame() {
+
+        final String[] usernameLoggedIn = {null};
 
         JFrame frame = new JFrame("Login");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -529,7 +528,7 @@ public class BalanceAppGUI {
         gbc.gridwidth = 2;
 
         // Title
-        JLabel title = new JLabel("Welcome Back", SwingConstants.CENTER);
+        JLabel title = new JLabel("Welcome Back!", SwingConstants.CENTER);
         title.setFont(new Font("Segoe UI", Font.BOLD, 20));
         card.add(title, gbc);
 
@@ -595,12 +594,12 @@ public class BalanceAppGUI {
         frame.add(background);
         frame.setVisible(true);
 
-        // Login button action
+
         loginBtn.addActionListener(e -> {
             String username = userField.getText();
             String password = new String(passField.getPassword());
             if (DatabaseManager.validateUser(username, password)) {
-                loginSuccess[0] = true;
+                usernameLoggedIn[0] = username; // store username
                 frame.dispose();
             } else {
                 JOptionPane.showMessageDialog(frame, "Invalid username or password!");
@@ -617,7 +616,7 @@ public class BalanceAppGUI {
             } catch (InterruptedException ignored) {}
         }
 
-        return loginSuccess[0];
+        return usernameLoggedIn[0];
     }
 
 

@@ -15,51 +15,57 @@ public class main {
         BalanceAppGUI balanceGUI = new BalanceAppGUI();
 
         while (true) {
-            // 1. Show login frame
-            boolean loggedIn = balanceGUI.showLoginFrame();
+            String username = balanceGUI.showLoginFrame();
 
-            if (!loggedIn) {
-                // User pressed cancel/closed window
+            if (username == null) {
+                // User pressed cancel or login failed
                 System.exit(0);
             }
 
-            // 2. Show main menu after successful login
-            boolean logout = showMainMenu(balanceGUI);
+            boolean logout = showMainMenu(balanceGUI, username);
 
             if (!logout) {
-                // Exit chosen
                 System.exit(0);
             }
-            // else -> loop restarts and login is shown again
         }
     }
 
     // Show login loop until success or exit
-    private static boolean showLoginLoop(BalanceAppGUI balanceGUI) {
-        boolean loggedIn = false;
-        while (!loggedIn) {
-            loggedIn = balanceGUI.showLoginFrame();
-            if (!loggedIn) {
-                //int choice = JOptionPane.showConfirmDialog(null, "Try again?", "Login", JOptionPane.YES_NO_OPTION);
-                //if (choice != JOptionPane.YES_OPTION) {
-                    return false; // Exit app if user chooses No
-                //}
+    private static String showLoginLoop(BalanceAppGUI balanceGUI) {
+        String username = null;
+
+        while (username == null) {
+            username = balanceGUI.showLoginFrame(); // now returns String
+
+            if (username == null) {
+                return null; // Exit app if user chooses No
             }
         }
-        return true;
+
+        return username; // successful login
     }
 
     // Show the main menu
-    private static boolean showMainMenu(BalanceAppGUI balanceGUI) {
+    private static boolean showMainMenu(BalanceAppGUI balanceGUI, String username) {
         JFrame frame = new JFrame("Balance App Menu");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-        // Make it fullscreen
         frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
         frame.setUndecorated(false);
 
-        JPanel panel = new JPanel(new GridLayout(0, 1, 20, 20)); // vertical list
+        JPanel panel = new JPanel(new GridLayout(0, 1, 20, 20));
         panel.setBorder(BorderFactory.createEmptyBorder(50, 200, 50, 200));
+
+        JPanel userPanel = new JPanel(new BorderLayout());
+        userPanel.setBackground(new Color(240, 240, 240)); // light gray background
+        userPanel.setBorder(BorderFactory.createEmptyBorder(15, 10, 15, 10));
+
+        JLabel userLabel = new JLabel("Logged in as: " + username, SwingConstants.CENTER);
+        userLabel.setFont(new Font("Segoe UI", Font.BOLD, 20));
+        userLabel.setForeground(new Color(66, 133, 244)); // modern blue
+        userPanel.add(userLabel, BorderLayout.CENTER);
+
+// Add the panel to the top of the main layout
+        frame.add(userPanel, BorderLayout.NORTH);
 
         String[] options = {"Insert daily", "SUM for month", "Show balance", "Update", "All months", "Logout"};
 
