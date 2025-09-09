@@ -64,14 +64,43 @@ public class main {
         userLabel.setForeground(new Color(66, 133, 244)); // modern blue
         userPanel.add(userLabel, BorderLayout.CENTER);
 
-// Add the panel to the top of the main layout
+        // Add the panel to the top of the main layout
         frame.add(userPanel, BorderLayout.NORTH);
+
+        ////////////////////////////
+        JPanel panel2 = new JPanel(new GridLayout(0, 1, 20, 20));
+        panel.setBorder(BorderFactory.createEmptyBorder(50, 400, 50, 400));
+        panel.setBackground(Color.WHITE);
+
 
         String[] options = {"Insert daily", "SUM for month", "Show balance", "Update", "All months", "Logout"};
 
         for (String option : options) {
             JButton button = new JButton(option);
+
+            // --- Modern button style ---
             button.setFont(new Font("Segoe UI", Font.BOLD, 18));
+            button.setPreferredSize(new Dimension(250, 60));
+            button.setFocusPainted(false);
+            button.setBackground(new Color(66, 133, 244)); // Blue
+            button.setForeground(Color.WHITE);
+            button.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+            button.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+            button.setOpaque(true);
+
+            // --- Hover effect ---
+            button.addMouseListener(new java.awt.event.MouseAdapter() {
+                @Override
+                public void mouseEntered(java.awt.event.MouseEvent evt) {
+                    button.setBackground(new Color(48, 108, 196)); // darker blue
+                }
+
+                @Override
+                public void mouseExited(java.awt.event.MouseEvent evt) {
+                    button.setBackground(new Color(66, 133, 244)); // normal blue
+                }
+            });
+
 
             final boolean[] logout = {false};
 
